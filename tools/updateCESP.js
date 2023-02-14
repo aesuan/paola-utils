@@ -5,12 +5,8 @@
  */
 require('dotenv').config();
 const { loadGoogleSpreadsheet, replaceWorksheet, getRows } = require('../googleSheets');
-const {
-  DOC_ID_CESP,
-  DOC_ID_PULSE,
-  SHEET_ID_CESP_ROSTER,
-  SHEET_ID_CESP_MODULE_COMPLETION,
-} = require('../config/cohorts');
+const { SHEET_ID_CESP_ROSTER, SHEET_ID_CESP_MODULE_COMPLETION } = require('../config');
+const { DOC_ID_CESP, DOC_ID_PULSE } = require('../config/cohorts');
 const techMentors = require('../config/techMentors');
 
 const CESP_ROSTER_SHEET_HEADERS = [

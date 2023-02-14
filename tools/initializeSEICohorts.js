@@ -3,7 +3,8 @@ const Bottleneck = require('bottleneck');
 const { createTeam, addUsersToTeam } = require('../github');
 const { createNewCohort, addStudentToCohort, updateCohortContent } = require('../learn');
 const { loadGoogleSpreadsheet, getRows } = require('../googleSheets');
-const { DOC_ID_CESP, SHEET_ID_CESP_ROSTER } = require('../config/cohorts');
+const { SHEET_ID_CESP_ROSTER } = require('../config');
+const { DOC_ID_CESP } = require('../config/cohorts');
 
 /**
  * Playbook for running this script:
