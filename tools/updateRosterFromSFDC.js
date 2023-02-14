@@ -2,8 +2,8 @@ require('dotenv').config();
 
 const { getAllStudents, formatSFDCStudentForRoster } = require('../salesforce');
 const { loadGoogleSpreadsheet } = require('../googleSheets');
+const { DOC_ID_HRPTIV } = require('../config');
 const {
-  DOC_ID_HRPTIV,
   DOC_ID_PULSE,
   SHEET_ID_HRPTIV_ROSTER,
 } = require('../config/cohorts');
