@@ -1,10 +1,13 @@
-name: Update CES&P
+name: Invite Student to GitHub
+run-name: Invite Student to GitHub (${{ inputs.handle }})
 on:
-  workflow_dispatch: {}
-  schedule:
-    - cron: '5 */10 * * *'
+  workflow_dispatch:
+    inputs:
+      handle:
+        description: 'GitHub handle to invite'
+        required: true
 jobs:
-  update-cesp:
+  invite-student-to-github:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -12,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '16'
-          
+
       - uses: actions/cache@v3
         id: cache
         with:
@@ -22,9 +25,8 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-
-      - name: Update CES&P
-        run: node tools/updateCESP.js
+        
+      - name: Invite student to GitHub
+        run: node tools/inviteToGitHub.js ${{ github.event.inputs.handle }}
         env:
-          GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
-          GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+          GITHUB_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}

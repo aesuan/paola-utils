@@ -1,10 +1,23 @@
 require('dotenv').config();
+const { format } = require('date-fns');
 const jsforce = require('jsforce');
-const { SFDC_OPPTY_RECORD_ID, SFDC_SELECT_QUERY } = require('../constants');
+const { loadGoogleSpreadsheet } = require('../googleSheets');
+const {
+  SFDC_SELECT_QUERY,
+  SFDC_FULL_TIME_COURSE_TYPE,
+  DOC_ID_HRPTIV,
+} = require('../config');
+const {
+  SHEET_ID_HRPTIV_ROSTER,
+  FULL_TIME_COURSE_START_DATE,
+} = require('../config/cohorts');
+
+const PRODUCT_CODE_CAMPUS_OVERRIDES = {
+  RFP: 'RFT Pacific',
+  RFE: 'RFT Eastern',
+};
 
 const conn = new jsforce.Connection({ loginUrl: process.env.SFDC_LOGIN_URL });
-// Salesforce API Integrations
-// ------------------------------
 
 const login = async () => {
   try {
@@ -18,10 +31,10 @@ const login = async () => {
   }
 };
 
-const generateWhereClause = (courseStart, courseType) => `RecordTypeId = '${SFDC_OPPTY_RECORD_ID}'
-AND Course_Product__c = 'Web Development'
+const generateWhereClause = (courseStart, courseType) => `Course_Product__c = 'Web Development'
 AND Course_Start_Date_Actual__c = ${courseStart}
-AND Course_Type__c LIKE '%${courseType}%'`;
+AND Course_Type__c LIKE '%${courseType}%'
+AND (StageName = 'Deposit Paid' OR StageName = 'Accepted')`; /* OR StageName = 'Contract Out' */
 
 const formatAddress = ({
   street,
@@ -44,14 +57,12 @@ const formatStudents = (students) => {
   const formattedStudents = students.map((student) => {
     const contact = student.Student__r || {};
 
-    // console.log(contact.MailingAddress)
-    // console.log(contact.OtherAddress)
-    // console.log(contact.Address_While_in_School__c)
     const mailingAddress = contact.MailingAddress ? formatAddress(contact.MailingAddress) : '';
     const otherAddress = contact.OtherAddress ? formatAddress(contact.OtherAddress) : '';
     const addressWhileInSchool = contact.Address_While_in_School__c || ''; /* ? formatAddress(contact.Address_While_in_School__c) : ''; */
     return {
-      fullName: contact.Name,
+      fullName: student.Full_Primary_Name__c,
+      // legalName: contact.Name,
       email: contact.Email,
       emailSecondary: contact.Secondary_Email__c,
       campus: student.Campus_Formatted__c,
@@ -70,14 +81,14 @@ const formatStudents = (students) => {
       preferredFirstName: contact.Preferred_First_Name__c,
       birthday: contact.Birthdate,
       phoneNumber: contact.Phone,
-      mailingAddress: mailingAddress,
+      mailingAddress,
       emergencyContactName: contact.Emergency_Contact_Name__c,
       emergencyContactPhone: contact.Emergency_Contact_Phone__c,
       emergencyContactRelationship: contact.Emergency_Contact_Relationship__c,
       tshirtSize: contact.Tshirt_Size__c,
       tshirtFit: contact.T_Shirt_Fit__c,
       highestDegree: contact.Highest_Degree__c,
-      gender: contact.gender__c,
+      gender: '',
       race: contact.Race__c,
       ethnicity: contact.EthnicityNew__c,
       identifyAsLGBTQ: contact.Identify_as_LGBTQ__c,
@@ -85,9 +96,9 @@ const formatStudents = (students) => {
       isDependentOfUSVeteran: contact.Dependent_of_Veteran__c,
       isCitizenOrPermanentResident: contact.US_Citizen_or_Permanent_Resident__c,
       hoodieSize: contact.Hoodie_Size__c,
-      addressWhileInSchool: addressWhileInSchool,
+      addressWhileInSchool,
       allergies: contact.Allergies__c,
-      otherAddress: otherAddress,
+      otherAddress,
       studentFunding1: contact.Student_Funding_1__c,
       studentFunding1Stage: contact.Student_Funding_1_Stage__c,
       paymentOption: student.Payment_Option__c,
@@ -113,7 +124,7 @@ const formatStudents = (students) => {
   return formattedStudents;
 };
 
-exports.getStudents = async (courseStart, courseType) => {
+const getStudents = async (courseStart, courseType) => {
   try {
     await login();
     return await conn.sobject('Opportunity')
@@ -130,7 +141,25 @@ exports.getStudents = async (courseStart, courseType) => {
   }
 };
 
-exports.getStudentsByReportID = async (reportID) => {
+const getStudentByOpportunityId = async (id) => {
+  await login();
+  return new Promise((resolve, reject) => {
+    try {
+      conn.sobject('Opportunity')
+        .retrieve(id, (err, res) => {
+          if (err) throw new Error('SALESFORCE ERROR', err);
+          const formattedStudents = formatStudents(res);
+          resolve(formattedStudents);
+        });
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+const getAllStudents = () => getStudents(FULL_TIME_COURSE_START_DATE, SFDC_FULL_TIME_COURSE_TYPE);
+
+const getStudentsByReportID = async (reportID) => {
   try {
     await login();
     const report = conn.analytics.report(reportID);
@@ -138,10 +167,60 @@ exports.getStudentsByReportID = async (reportID) => {
       if (err) throw new Error('SALESFORCE ERROR', err);
       const { rows } = result.factMap['T!T'];
       const formattedStudents = rows.map((row) => result.reportMetadata.detailColumns
-        .reduce((a, b, i) => (a[b] = row.dataCells[i].value, a), {}));
+        .reduce((a, b, i) => (a[b] = row.dataCells[i].value, a), {})); // eslint-disable-line
       return formattedStudents;
     });
   } catch (error) {
     return error;
   }
+};
+
+const hasIntakeFormCompleted = (student) => student.funFact
+  && student.selfReportedPrepartion && student.githubHandle;
+
+const getEnrolledStudentSFDCContactIDs = async (docID, sheetID) => {
+  const doc = await loadGoogleSpreadsheet(docID);
+  const sheet = doc.sheetsById[sheetID];
+  const rows = await sheet.getRows();
+  return rows.map((row) => row.sfdcContactId);
+};
+
+const getNewStudentsFromSFDC = async () => {
+  const students = await getAllStudents();
+  const enrolledStudentContactIDs = await getEnrolledStudentSFDCContactIDs(
+    DOC_ID_HRPTIV,
+    SHEET_ID_HRPTIV_ROSTER,
+  );
+  return students.filter((student) => !enrolledStudentContactIDs.includes(student.sfdcContactId));
+};
+
+const formatSFDCStudentForRoster = (student) => {
+  let { campus } = student;
+  Object.keys(PRODUCT_CODE_CAMPUS_OVERRIDES).forEach((key) => {
+    if (student.productCode.includes(key)) {
+      campus = PRODUCT_CODE_CAMPUS_OVERRIDES[key];
+    }
+  });
+  return {
+    ...student,
+    phoneNumber: student.phoneNumber.replace(/^\s*\+/, ''),
+    campus,
+    dateAddedToPrecourse: format(new Date(), 'MM/dd/yyyy'),
+    secondaryEmail: student.emailSecondary,
+    githubHandle: student.github,
+    isUSVeteran: student.isUSVeteran ? 'Yes' : 'No',
+    isDependentOfUSVeteran: student.isDependentOfUSVeteran ? 'Yes' : 'No',
+    isCitizenOrPermanentResident: student.isCitizenOrPermanentResident ? 'Yes' : 'No',
+    studentOnboardingFormCompletedOn: (new Date(student.studentOnboardingFormCompletedOn)).toISOString(),
+  };
+};
+
+module.exports = {
+  getStudents,
+  getAllStudents,
+  getStudentsByReportID,
+  hasIntakeFormCompleted,
+  getNewStudentsFromSFDC,
+  getStudentByOpportunityId,
+  formatSFDCStudentForRoster,
 };

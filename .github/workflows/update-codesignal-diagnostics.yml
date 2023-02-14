@@ -1,4 +1,4 @@
-name: Update CES&P
+name: Update CodeSignal Diagnostics
 on:
   workflow_dispatch: {}
   schedule:
@@ -23,8 +23,10 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
 
-      - name: Update CES&P
-        run: node tools/updateCESP.js
+      - name: Update CodeSignal Diagnostic scores in Pulse
+        run: node codesignal/updateDiagnostics.js
         env:
           GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
           GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+          CODESIGNAL_API_KEY: ${{ secrets.CODESIGNAL_API_KEY }}
+

@@ -50,7 +50,7 @@ const getDraftBySubject = async (subjectQuery) => {
     id: allDrafts.data.drafts[0].id,
     format: 'full',
   });
-  
+
   DRAFT_CACHE[subjectQuery] = draft.data;
   return draft.data;
 };
@@ -68,6 +68,7 @@ const populateMergeFields = (body, subject, mergeFields) => {
   let mergedSubject = subject;
   Object.entries(mergeFields).forEach((obj) => {
     mergedBody = mergedBody.replace(`{{${obj[0]}}}`, obj[1]);
+    mergedBody = mergedBody.replace(encodeURIComponent(`{{${obj[0]}}}`), obj[1]);
     mergedSubject = mergedSubject.replace(`{{${obj[0]}}}`, obj[1]);
   });
   return { mergedBody, mergedSubject };
@@ -102,16 +103,17 @@ const generateEmail = (body, subject, toList, ccList, bccList, alias, mergeField
 exports.sendEmail = async (body, subject, toList, ccList, bccList, alias, mergeFields) => {
   try {
     const service = await authenticate();
-    const encodedEmail = generateEmail(
-      body, subject, toList, ccList, bccList, alias, mergeFields,
-    );
-    const res = await service.users.messages.send({
-      userId: 'me',
-      requestBody: {
-        raw: encodedEmail,
-      },
-    });
-    return res.status === 200;
+    const responses = [];
+    for (let i = 0; i < toList.length; i += 100) {
+      const encodedEmail = generateEmail(body, subject, toList.slice(i, i + 100), ccList, bccList, alias, mergeFields);
+      responses.push(await service.users.messages.send({
+        userId: 'me',
+        requestBody: {
+          raw: encodedEmail,
+        },
+      }));
+    }
+    return responses.every((res) => res.status === 200);
   } catch (error) {
     return error.message;
   }
@@ -120,7 +122,6 @@ exports.sendEmail = async (body, subject, toList, ccList, bccList, alias, mergeF
 // Send an email using a draft email template
 exports.sendEmailFromDraft = async (subjectQuery, toList, ccList, bccList, alias, mergeFields) => {
   try {
-    const service = await authenticate();
     const draft = await getDraftBySubject(subjectQuery);
     if (draft.message.payload.parts[1].body.attachmentId) {
       throw new Error('Cannot send attachment with this method.');
@@ -131,18 +132,7 @@ exports.sendEmailFromDraft = async (subjectQuery, toList, ccList, bccList, alias
     const subject = headers.find((item) => item.name === 'Subject').value;
     const { data } = draft.message.payload.parts[1].body;
     const body = Buffer.from(data, 'base64').toString('utf8');
-    const encodedEmail = generateEmail(
-      body, subject, toList, ccList, bccList, alias, mergeFields,
-    );
-
-    // send email
-    const res = await service.users.messages.send({
-      userId: 'me',
-      requestBody: {
-        raw: encodedEmail,
-      },
-    });
-    return res.status === 200;
+    return this.sendEmail(body, subject, toList, ccList, bccList, alias, mergeFields);
   } catch (error) {
     console.log(error);
     return error.message;

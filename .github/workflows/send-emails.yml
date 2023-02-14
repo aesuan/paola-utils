@@ -1,10 +1,21 @@
-name: New Student Onboarding
+name: Send Emails
+run-name: Send Emails (${{ inputs.emails }}) (Dry run - ${{ inputs.dry-run }})
 on:
-  workflow_dispatch: {}
-  schedule:
-    - cron: '0 */2 * * *'
+  workflow_dispatch:
+    inputs:
+      emails:
+        description: 'emails to send'
+        required: false
+        default: 'studentInfoFormReminder joinSlackReminder'
+      dry-run:
+        description: 'print out recipient names without sending'
+        required: false
+        default: true
+      test-email-address:
+        description: 'email address that a single test email will be sent to'
+        required: false
 jobs:
-  onboard-students:
+  send-emails:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,9 +33,9 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-        
-      - name: Onboard new students
-        run: node tools/onboard.js
+
+      - name: Send emails
+        run: node tools/emails/cli.js --emails ${{ github.event.inputs.emails }} --dry-run ${{ github.event.inputs.dry-run }} --test-email-address ${{ github.event.inputs.test-email-address }}
         env:
           GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
           GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
@@ -33,7 +44,6 @@ jobs:
           SFDC_LOGIN_URL: ${{ secrets.SFDC_LOGIN_URL }}
           SFDC_USERNAME: ${{ secrets.SFDC_USERNAME }}
           SFDC_PASSWORD: ${{ secrets.SFDC_PASSWORD }}
-          GITHUB_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
           LEARN_TOKEN: ${{ secrets.LEARN_TOKEN }}
           SLACK_TOKEN_SEIOPR: ${{ secrets.SLACK_TOKEN_SEIOPR }}
           SLACK_TOKEN_HRSEIP: ${{ secrets.SLACK_TOKEN_HRSEIP }}

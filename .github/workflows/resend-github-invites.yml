@@ -1,10 +1,10 @@
-name: Update CES&P
+name: Re-send GitHub Invites
 on:
   workflow_dispatch: {}
   schedule:
     - cron: '5 */10 * * *'
 jobs:
-  update-cesp:
+  resend-github-invites:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,8 +23,9 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
 
-      - name: Update CES&P
-        run: node tools/updateCESP.js
+      - name: Re-send GitHub invites
+        run: node tools/resendGitHubInvites.js
         env:
           GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
           GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+          GITHUB_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}

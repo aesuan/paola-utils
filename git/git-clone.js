@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { exec, execSync } = require('child_process');
+const { exec } = require('child_process');
 
 const GIT_RETURN_CODE = {
   ERROR_REPO_CLONE: 0,
@@ -10,10 +10,10 @@ const GIT_RETURN_CODE = {
   REPO_NOT_CHANGED: 5,
 };
 
-function getRepositoryURL(githubPath) {
+function getRepositoryURL(githubPath, authUser, authToken) {
   let auth = '';
-  if (process.env.GIT_AUTH_USER && process.env.GIT_TOKEN) {
-    auth = `${process.env.GIT_AUTH_USER}:${process.env.GIT_TOKEN}@`;
+  if (authUser && authToken) {
+    auth = `${authUser}:${authToken}@`;
   }
   return `https://${auth}github.com/${githubPath}`;
 }
@@ -31,12 +31,11 @@ function getRepositoryURL(githubPath) {
 function getLocalRepositoryHash(localPath) {
   return new Promise((resolve) => {
     exec(`GIT_DIR=${localPath}/.git git rev-parse HEAD`, (err, stdout) =>
-      resolve(err ? null : stdout.trim()),
-    );
+      resolve(err ? null : stdout.trim()));
   });
 }
 
-async function cloneOrPullRepository(localPath, githubPath, previousSHA) {
+async function cloneOrPullRepository(localPath, githubPath, previousSHA, authUser, authToken) {
   // TODO: get ls-remote working to avoid extra clone step
   // const nextSHA = await getRemoteRepositoryHash(githubPath);
   // if (!nextSHA) {
@@ -55,10 +54,9 @@ async function cloneOrPullRepository(localPath, githubPath, previousSHA) {
   return new Promise((resolve) => {
     if (!fs.existsSync(localPath)) {
       exec(
-        `git clone ${getRepositoryURL(githubPath)} ${localPath} --depth 1`,
+        `git clone ${getRepositoryURL(githubPath, authUser, authToken)} ${localPath} --depth 1`,
         (err) => {
           if (err) {
-            console.log(err);
             resolve({
               hash: undefined,
               code: GIT_RETURN_CODE.REPO_NOT_FOUND,

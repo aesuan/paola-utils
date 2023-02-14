@@ -1,0 +1,43 @@
+name: Repo Completion
+on:
+  workflow_dispatch:
+    inputs:
+      tech_mentors:
+        description: 'Tech mentor first names (space-separated)'
+        required: false
+      projects:
+        description: 'Project names (space-separated)'
+        required: false
+  schedule:
+    - cron: '0 13,16,19,22 * * *'
+jobs:
+  repo-completion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          
+      - uses: actions/cache@v3
+        id: cache
+        with:
+          path: |
+            **/node_modules
+            /home/runner/.cache/Cypress
+            /home/runner/.cache/puppeteer
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}-with-browsers
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: npm install
+        
+      - name: Run repo completion
+        run: xvfb-run --auto-servernum node tools/completion/cli.js --tech-mentors ${{ github.event.inputs.tech_mentors }} --projects ${{ github.event.inputs.projects }}
+        env:
+          GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+          GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
+          GITHUB_AUTH_USER: ${{ secrets.GIT_AUTH_USER }}
+          GITHUB_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
+          
