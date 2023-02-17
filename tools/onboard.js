@@ -15,6 +15,7 @@ const {
   GITHUB_ORG_NAME,
   DOC_ID_HRPTIV,
   SHEET_ID_HRPTIV_NAUGHTY_LIST,
+  SLACK_REPORTING_CHANNEL,
 } = require('../config');
 const {
   COHORT_ID,
@@ -180,7 +181,7 @@ const addStudentsToGitHub = async (students) => {
       );
 
       const message = `⚠ GitHub handle "${student.githubHandle}" not found for student ${student.fullName}! The student has been emailed.`;
-      await sendMessageToChannel('new-students', message);
+      await sendMessageToChannel(SLACK_REPORTING_CHANNEL, message);
     }
   }
   await createBranches(GITHUB_ORG_NAME, `${COHORT_ID}-javascript-koans`, gitHandles);
@@ -230,8 +231,13 @@ const reportNewStudentsToSlack = async (newStudents, pods) => {
       (student) => `· ${student.fullName} → ${pod.name}`,
     ).join('\n')).join('\n');
   if (slackMessage !== '') {
-    await sendMessageToChannel('new-students', slackMessage);
+    await sendMessageToChannel(SLACK_REPORTING_CHANNEL, slackMessage);
   }
+};
+
+const reportError = async (message, err) => {
+  const slackMessage = `**⚠ Onboarding error**: ${message}\n\n${err.message}`;
+  await sendMessageToChannel(SLACK_REPORTING_CHANNEL, slackMessage);
 };
 
 (async () => {
@@ -260,8 +266,7 @@ const reportNewStudentsToSlack = async (newStudents, pods) => {
         naughtyListStudents,
       );
     } catch (err) {
-      console.error('Error updating HRPTIV naughty list!');
-      console.error(err);
+      await reportError('Error updating HRPTIV naughty list!', err);
     }
   }
 
@@ -279,8 +284,7 @@ const reportNewStudentsToSlack = async (newStudents, pods) => {
       console.info('Adding students to HRPTIV roster...');
       await sheetHRPTIV.sheetsById[SHEET_ID_HRPTIV_ROSTER].addRows(eligibleNewStudents);
     } catch (err) {
-      console.error('Error updating HRPTIV roster!');
-      console.error(err);
+      await reportError('Error updating HRPTIV roster!', err);
     }
     const sheetPulse = await loadGoogleSpreadsheet(DOC_ID_PULSE);
     const pods = await assignStudentsToPods(sheetPulse, eligibleNewStudents);
@@ -288,36 +292,31 @@ const reportNewStudentsToSlack = async (newStudents, pods) => {
       console.info('Adding students to Repo Completion sheets...');
       await addStudentsToRepoCompletionSheets(sheetPulse, pods);
     } catch (err) {
-      console.error('Error adding students to Repo Completion sheets!');
-      console.error(err);
+      await reportError('Error adding students to Repo Completion sheets!', err);
     }
     try {
       console.info('Adding students to the Learn cohort...');
       await addStudentsToLearnCohort(eligibleNewStudents);
     } catch (err) {
-      console.error('Error adding students to the Learn cohort!');
-      console.error(err);
+      await reportError('Error adding students to the Learn cohort!', err);
     }
     try {
       console.info('Creating Slack channels...');
       await createStudentSlackChannels(eligibleNewStudents);
     } catch (err) {
-      console.error('Error creating Slack channels!');
-      console.error(err);
+      await reportError('Error creating Slack channels!', err);
     }
     try {
       console.info('Adding students to GitHub team and creating branches...');
       await addStudentsToGitHub(eligibleNewStudents);
     } catch (err) {
-      console.error('Error adding students to GitHub!');
-      console.error(err);
+      await reportError('Error adding students to GitHub!', err);
     }
     try {
       console.info('Sending welcome emails to new students...');
       await sendWelcomeEmails(eligibleNewStudents);
     } catch (err) {
-      console.error('Error sending welcome emails to new students!');
-      console.error(err);
+      await reportError('Error sending welcome emails to new students!', err);
     }
     console.info('Reporting to Slack...');
     await reportNewStudentsToSlack(eligibleNewStudents, pods);

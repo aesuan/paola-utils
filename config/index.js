@@ -23,6 +23,7 @@ module.exports = {
   ],
   SLACK_JOIN_URL_STUB_HRSEIP: 'join.slack.com/t/hrseip/shared_invite/zt-u5go0u3k-9H_2XJZLp8JwSfvyhMNeRQ',
   SLACK_JOIN_URL_STUB_SEIOPR: 'join.slack.com/t/sei-opr/shared_invite/zt-1713wh5hc-vYsb9ut7gKri6CcGGJS~nQ',
+  SLACK_REPORTING_CHANNEL: 'new-students',
 
   /* Salesforce */
   SFDC_OPPTY_RECORD_ID: '012j0000000qVAP',
