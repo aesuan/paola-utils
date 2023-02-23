@@ -57,7 +57,7 @@ const normalizeField = (str) => String(str).replace(/\r/g, '');
     console.log(`For techMentor ${techMentorName}, ${repoCompletionStudents.length} students found`);
 
     for (const repoCompletionStudent of repoCompletionStudents) { // eslint-disable-line
-      const sfdcStudent = sfdcStudents.find((s) => s.github === repoCompletionStudent.githubHandle);
+      const sfdcStudent = sfdcStudents.find((s) => s.fullName === repoCompletionStudent.fullName.trim());
       if (!sfdcStudent) {
         // Student opp not found, which means they've separated
         console.log('No match for student:', repoCompletionStudent.fullName, ' - has this student separated?');
