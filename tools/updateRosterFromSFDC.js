@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./reportErrorsToSlack');
 
 const { getAllStudents, formatSFDCStudentForRoster } = require('../salesforce');
 const { loadGoogleSpreadsheet } = require('../googleSheets');

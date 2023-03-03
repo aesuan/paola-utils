@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./reportErrorsToSlack');
 
 const Bottleneck = require('bottleneck');
 const { sendEmailFromDraft } = require('../googleMail');

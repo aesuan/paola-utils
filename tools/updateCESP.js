@@ -4,6 +4,7 @@
  *  - handle separated students
  */
 require('dotenv').config();
+require('./reportErrorsToSlack');
 const { loadGoogleSpreadsheet, replaceWorksheet, getRows } = require('../googleSheets');
 const { SHEET_ID_CESP_ROSTER, SHEET_ID_CESP_MODULE_COMPLETION } = require('../config');
 const { DOC_ID_CESP, DOC_ID_PULSE } = require('../config/cohorts');

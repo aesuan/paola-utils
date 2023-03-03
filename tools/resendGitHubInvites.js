@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./reportErrorsToSlack');
 
 const { addUsersToTeam, gitHubAPIRequest } = require('../github');
 const { GITHUB_STUDENT_TEAM } = require('../config/cohorts');

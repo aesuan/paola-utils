@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('../reportErrorsToSlack');
 const yargs = require('yargs');
 const path = require('path');
 const {
