@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('../tools/reportErrorsToSlack');
 const {
   getCodeSignalResults,
   formatResultObject,

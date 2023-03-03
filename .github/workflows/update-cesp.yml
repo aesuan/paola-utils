@@ -28,3 +28,5 @@ jobs:
         env:
           GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
           GOOGLE_SHEETS_PRIVATE_KEY: ${{ secrets.GOOGLE_SHEETS_PRIVATE_KEY }}
+          SLACK_TOKEN_SEIOPR: ${{ secrets.SLACK_TOKEN_SEIOPR }}
+          SLACK_TOKEN_HRSEIP: ${{ secrets.SLACK_TOKEN_HRSEIP }}

@@ -40,4 +40,5 @@ jobs:
           GOOGLE_SHEETS_CLIENT_EMAIL: ${{ secrets.GOOGLE_SHEETS_CLIENT_EMAIL }}
           GITHUB_AUTH_USER: ${{ secrets.GIT_AUTH_USER }}
           GITHUB_AUTH_TOKEN: ${{ secrets.GIT_AUTH_TOKEN }}
-          
+          SLACK_TOKEN_SEIOPR: ${{ secrets.SLACK_TOKEN_SEIOPR }}
+          SLACK_TOKEN_HRSEIP: ${{ secrets.SLACK_TOKEN_HRSEIP }}

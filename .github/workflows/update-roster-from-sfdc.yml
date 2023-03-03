@@ -31,3 +31,5 @@ jobs:
           SFDC_LOGIN_URL: ${{ secrets.SFDC_LOGIN_URL }}
           SFDC_USERNAME: ${{ secrets.SFDC_USERNAME }}
           SFDC_PASSWORD: ${{ secrets.SFDC_PASSWORD }}
+          SLACK_TOKEN_SEIOPR: ${{ secrets.SLACK_TOKEN_SEIOPR }}
+          SLACK_TOKEN_HRSEIP: ${{ secrets.SLACK_TOKEN_HRSEIP }}
