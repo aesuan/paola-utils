@@ -9,7 +9,7 @@ This repository has two broad components:
 
 ## Tools
 
-All existing tools are Node.js scripts which live in the `tools/` directory. For details on secret management, see the [Secret Management](Secret Management) section below. Included below are brief descriptions of each of the currently-available tools.
+All existing tools are Node.js scripts which live in the `tools/` directory. For details on secret management, see the Secret Management section below. Included below are brief descriptions of each of the currently-available tools.
 
 ### Automated Repo Completion
 
@@ -69,7 +69,7 @@ This tool regenerates the Currently Enrolled Students & Progress sheet based on 
 
 This tool pulls all students from Salesforce and updates the Precourse roster with any fields that differ between SFDC and the roster. This tool runs via a workflow a few times per day.
 
-## Secrets
+## Secret Management
 
 Secrets are provided via _environment variables_, and some secrets are required for basically every tool.
 
