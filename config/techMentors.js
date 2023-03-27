@@ -3,11 +3,6 @@ module.exports = [{
   repoCompletionSheetID: '1199935631',
   repoCompletionSheetName: 'BH - Repo Completion',
 }, {
-  name: 'Dan',
-  repoCompletionSheetID: '632032752',
-  repoCompletionSheetName: 'DR - Repo Completion',
-  // podSizeRatio: 0.5,
-}, {
   name: 'Eliza',
   repoCompletionSheetID: '1230675164',
   repoCompletionSheetName: 'ED - Repo Completion',

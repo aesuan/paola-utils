@@ -16,7 +16,6 @@ module.exports = {
   /* Slack */
   SLACK_TM_EMAILS: [
     'beverly.hernandez@galvanize.com',
-    'daniel.rouse@galvanize.com',
     'eliza.drinker@galvanize.com',
     'steven.chung@galvanize.com',
     'david.coleman@galvanize.com',
