@@ -12,13 +12,15 @@ module.exports = {
         config: {
           defaultCommandTimeout: 100,
           fixturesFolder: false,
-          integrationFolder: path.resolve(__dirname, 'twiddler-cypress-tests'),
-          pluginsFile: false,
-          supportFile: false,
           screenshotOnRunFailure: false,
           video: false,
           numTestsKeptInMemory: 0,
           watchForFileChanges: false,
+          e2e: {
+            testIsolation: false,
+            specPattern: path.resolve(__dirname, 'twiddler-cypress-tests', '*.js'),
+            supportFile: false,
+          },
         },
         configFile: false,
         quiet: true,
