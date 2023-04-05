@@ -19,7 +19,7 @@
   "homepage": "https://github.com/hackreactor/paola-utils#readme",
   "dependencies": {
     "bottleneck": "^2.19.5",
-    "cypress": "8.4.0",
+    "cypress": "^12.9.0",
     "date-fns": "^2.16.1",
     "dotenv": "^16.0.0",
     "eslint": "^8.26.0",
