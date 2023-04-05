@@ -18,8 +18,8 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'
-          
+          node-version: '18'
+
       - uses: actions/cache@v3
         id: cache
         with:
@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
-        
+
       - name: Run repo completion
         run: xvfb-run --auto-servernum node tools/completion/cli.js --tech-mentors ${{ github.event.inputs.tech_mentors }} --projects ${{ github.event.inputs.projects }}
         env:
